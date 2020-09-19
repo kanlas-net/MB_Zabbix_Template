@@ -1,1 +1,1 @@
-# MB_Zabbix_Template
+# Mount&Blade Dedicated Server Zabbix Template
