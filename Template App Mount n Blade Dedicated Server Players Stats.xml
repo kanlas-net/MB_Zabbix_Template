@@ -140,7 +140,7 @@
                     <preprocessing>
                         <step>
                             <type>REGEX</type>
-                            <params>.+ - (.+) has joined the game with ID: (^[^0]{1}|\d{2,})
+                            <params>.+ - (.+) has joined the game with ID: ([^0]{1}|\d{2,})
 {&quot;data&quot;:[{&quot;{#PLAYER_NAME}&quot;:&quot;\1&quot;}]}</params>
                             <error_handler>DISCARD_VALUE</error_handler>
                         </step>
