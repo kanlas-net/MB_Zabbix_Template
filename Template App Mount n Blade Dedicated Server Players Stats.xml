@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2020-09-24T13:27:26Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App Mount n Blade Dedicated Server Players Stats</template>
+            <name>Template App Mount n Blade Dedicated Server Players Stats</name>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Dedicated Server Data</name>
+                </application>
+                <application>
+                    <name>Dedicated Server Player Calculations</name>
+                </application>
+                <application>
+                    <name>Dedicated Server Player Stats</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Server Logs</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[&quot;{$LOG_PATH}&quot;]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>LOG</value_type>
+                    <applications>
+                        <application>
+                            <name>Dedicated Server Data</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Players statistics</name>
+                    <type>DEPENDENT</type>
+                    <key>players.stats</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Headshot kills calculations: {#PLAYER_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>kills.headshot.calc[&quot;{#PLAYER_NAME}&quot;]</key>
+                            <delay>5m</delay>
+                            <params>count(&quot;logrt[\&quot;{$LOG_PATH}\&quot;]&quot;,5m,&quot;.+ - {#PLAYER_NAME} &lt;img=ico_({$HEADSHOT}){1}&gt; .+&quot;,regexp)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Player Calculations</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Headshot kills: {#PLAYER_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>kills.headshot[&quot;{#PLAYER_NAME}&quot;]</key>
+                            <delay>0;h/1m20</delay>
+                            <params>sum(&quot;kills.headshot.calc[\&quot;{#PLAYER_NAME}\&quot;]&quot;, 4w)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Player Stats</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Melee kills calculations: {#PLAYER_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>kills.melee.calc[&quot;{#PLAYER_NAME}&quot;]</key>
+                            <delay>5m</delay>
+                            <params>count(&quot;logrt[\&quot;{$LOG_PATH}\&quot;]&quot;,5m,&quot;.+ - {#PLAYER_NAME} &lt;img=ico_({$MELEE}){1}&gt; .+&quot;,regexp)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Player Calculations</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Melee kills: {#PLAYER_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>kills.melee[&quot;{#PLAYER_NAME}&quot;]</key>
+                            <delay>0;h/1m25</delay>
+                            <params>sum(&quot;kills.melee.calc[\&quot;{#PLAYER_NAME}\&quot;]&quot;, 4w)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Player Stats</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Ranged kills calculations: {#PLAYER_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>kills.ranged.calc[&quot;{#PLAYER_NAME}&quot;]</key>
+                            <delay>5m</delay>
+                            <params>count(&quot;logrt[\&quot;{$LOG_PATH}\&quot;]&quot;,5m,&quot;.+ - {#PLAYER_NAME} &lt;img=ico_({$RANGED}){1}&gt; .+&quot;,regexp)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Player Calculations</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Ranged kills: {#PLAYER_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>kills.ranged[&quot;{#PLAYER_NAME}&quot;]</key>
+                            <delay>0;h/1m30</delay>
+                            <params>sum(&quot;kills.ranged.calc[\&quot;{#PLAYER_NAME}\&quot;]&quot;, 4w)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Player Stats</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Summary kills: {#PLAYER_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>kills.summary[&quot;{#PLAYER_NAME}&quot;]</key>
+                            <delay>0;h/1m27,32,35</delay>
+                            <params>last(&quot;kills.melee[\&quot;{#PLAYER_NAME}\&quot;]&quot;)+last(&quot;kills.ranged[\&quot;{#PLAYER_NAME}\&quot;]&quot;)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Player Stats</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>logrt[&quot;{$LOG_PATH}&quot;]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <params>.+ - (.+) has joined the game with ID: (^[^0]{1}|\d{2,})
+{&quot;data&quot;:[{&quot;{#PLAYER_NAME}&quot;:&quot;\1&quot;}]}</params>
+                            <error_handler>DISCARD_VALUE</error_handler>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$HEADSHOT}</macro>
+                    <value>headshot</value>
+                </macro>
+                <macro>
+                    <macro>{$LOG_PATH}</macro>
+                    <value>/path/to/Logs/server_log_.+\.txt</value>
+                </macro>
+                <macro>
+                    <macro>{$MELEE}</macro>
+                    <value>axeone|axetwo|blunt|couchedlance|horseimpact|punch|spear|swordone</value>
+                </macro>
+                <macro>
+                    <macro>{$RANGED}</macro>
+                    <value>bow|crossbow|headshot|stonethrow</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>

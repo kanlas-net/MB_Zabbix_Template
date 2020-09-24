@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2020-09-24T13:26:38Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App Mount n Blade Dedicated Server</template>
+            <name>Template App Mount n Blade Dedicated Server</name>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Dedicated Server Data</name>
+                </application>
+                <application>
+                    <name>Dedicated Server General Stats</name>
+                </application>
+                <application>
+                    <name>Dedicated Server Map Calculations</name>
+                </application>
+                <application>
+                    <name>Dedicated Server Map Stats</name>
+                </application>
+                <application>
+                    <name>Dedicated Server Player Calculations</name>
+                </application>
+                <application>
+                    <name>Dedicated Server Player Stats</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Current Map</name>
+                    <type>DEPENDENT</type>
+                    <key>map.current</key>
+                    <delay>0</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Dedicated Server Data</name>
+                        </application>
+                        <application>
+                            <name>Dedicated Server General Stats</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>XMLPATH</type>
+                            <params>/ServerStats/MapName/text()</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>system.run[&quot;curl --silent -X GET http://127.0.0.1:{$PORT}&quot;]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>TCP check</name>
+                    <type>SIMPLE</type>
+                    <key>net.tcp.service[http, {HOST.CONN}, {$PORT}]</key>
+                    <applications>
+                        <application>
+                            <name>Dedicated Server Data</name>
+                        </application>
+                        <application>
+                            <name>Dedicated Server General Stats</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}=0</expression>
+                            <name>Dedicated server is down</name>
+                            <priority>DISASTER</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Players</name>
+                    <type>DEPENDENT</type>
+                    <key>players.current</key>
+                    <delay>0</delay>
+                    <applications>
+                        <application>
+                            <name>Dedicated Server Data</name>
+                        </application>
+                        <application>
+                            <name>Dedicated Server General Stats</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>XMLPATH</type>
+                            <params>/ServerStats/NumberOfActivePlayers/text()</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>system.run[&quot;curl --silent -X GET http://127.0.0.1:{$PORT}&quot;]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Server Stats</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>system.run[&quot;curl --silent -X GET http://127.0.0.1:{$PORT}&quot;]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Dedicated Server Data</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Server in List</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>system.run[&quot;host=$(echo {HOST.IP} | sed 's/\./\\./g'); port={$PORT}; if [ $port -ne '7240' ]; then port=':'$port; else port=''; fi; curl --silent -X GET 'http://warbandmain.taleworlds.com/handlerservers.ashx?type=list&amp;gametype={$GAMETYPE}' | tr '|' '\n' | if grep -q ^$host$port$; then echo 1; else echo 0; fi;&quot;]</key>
+                    <applications>
+                        <application>
+                            <name>Dedicated Server Data</name>
+                        </application>
+                        <application>
+                            <name>Dedicated Server General Stats</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}=0</expression>
+                            <name>Dedicated server not listed at headserver</name>
+                            <priority>DISASTER</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Dedicated server is down</name>
+                                    <expression>{Template App Mount n Blade Dedicated Server:net.tcp.service[http, {HOST.CONN}, {$PORT}].last()}=0</expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Maps Statistics</name>
+                    <type>DEPENDENT</type>
+                    <key>maps.stats</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Map players in the moment: {#MAP_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>map.players_in_moment[&quot;{#MAP_NAME}&quot;]</key>
+                            <params>count(&quot;map.current&quot;,1m,&quot;{#MAP_NAME}&quot;,eq)*last(&quot;players.current&quot;)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Map Calculations</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Map score: {#MAP_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>map.score[&quot;{#MAP_NAME}&quot;]</key>
+                            <delay>1h</delay>
+                            <params>sum(&quot;map.players_in_moment[\&quot;{#MAP_NAME}\&quot;]&quot;, 4w)*last(&quot;map.time[\&quot;{#MAP_NAME}\&quot;]&quot;)/1440</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Map Stats</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Map time: {#MAP_NAME}</name>
+                            <type>CALCULATED</type>
+                            <key>map.time[&quot;{#MAP_NAME}&quot;]</key>
+                            <delay>1h</delay>
+                            <units>minutes</units>
+                            <params>count(&quot;map.current&quot;,4w,&quot;{#MAP_NAME}&quot;,eq)</params>
+                            <applications>
+                                <application>
+                                    <name>Dedicated Server Map Calculations</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>map.current</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <params>(.*)
+{&quot;data&quot;:[{&quot;{#MAP_NAME}&quot;:&quot;\1&quot;}]}</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$GAMETYPE}</macro>
+                    <value>warband</value>
+                </macro>
+                <macro>
+                    <macro>{$PORT}</macro>
+                    <value>7240</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <graphs>
+        <graph>
+            <name>Availability</name>
+            <show_work_period>NO</show_work_period>
+            <show_triggers>NO</show_triggers>
+            <ymin_type_1>FIXED</ymin_type_1>
+            <ymax_type_1>FIXED</ymax_type_1>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>FILLED_REGION</drawtype>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>Template App Mount n Blade Dedicated Server</host>
+                        <key>net.tcp.service[http, {HOST.CONN}, {$PORT}]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>Players</name>
+            <ymin_type_1>FIXED</ymin_type_1>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>FILLED_REGION</drawtype>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>Template App Mount n Blade Dedicated Server</host>
+                        <key>players.current</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
+</zabbix_export>
