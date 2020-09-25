@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2020-09-24T13:26:38Z</date>
+    <date>2020-09-25T19:01:19Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -122,6 +122,7 @@
                     <name>Server in List</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>system.run[&quot;host=$(echo {HOST.IP} | sed 's/\./\\./g'); port={$PORT}; if [ $port -ne '7240' ]; then port=':'$port; else port=''; fi; curl --silent -X GET 'http://warbandmain.taleworlds.com/handlerservers.ashx?type=list&amp;gametype={$GAMETYPE}' | tr '|' '\n' | if grep -q ^$host$port$; then echo 1; else echo 0; fi;&quot;]</key>
+                    <delay>5m</delay>
                     <applications>
                         <application>
                             <name>Dedicated Server Data</name>
@@ -132,7 +133,7 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{last()}=0</expression>
+                            <expression>{max(#3)}=0</expression>
                             <name>Dedicated server not listed at headserver</name>
                             <priority>DISASTER</priority>
                             <dependencies>
